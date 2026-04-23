@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VisaoGeralRouteImport } from './routes/visao-geral'
 import { Route as MetodologiaRouteImport } from './routes/metodologia'
+import { Route as DadosTesouroRouteImport } from './routes/dados-tesouro'
+import { Route as DadosAlespRouteImport } from './routes/dados-alesp'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +24,16 @@ const VisaoGeralRoute = VisaoGeralRouteImport.update({
 const MetodologiaRoute = MetodologiaRouteImport.update({
   id: '/metodologia',
   path: '/metodologia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DadosTesouroRoute = DadosTesouroRouteImport.update({
+  id: '/dados-tesouro',
+  path: '/dados-tesouro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DadosAlespRoute = DadosAlespRouteImport.update({
+  id: '/dados-alesp',
+  path: '/dados-alesp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContatoRoute = ContatoRouteImport.update({
@@ -38,12 +50,16 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contato': typeof ContatoRoute
+  '/dados-alesp': typeof DadosAlespRoute
+  '/dados-tesouro': typeof DadosTesouroRoute
   '/metodologia': typeof MetodologiaRoute
   '/visao-geral': typeof VisaoGeralRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contato': typeof ContatoRoute
+  '/dados-alesp': typeof DadosAlespRoute
+  '/dados-tesouro': typeof DadosTesouroRoute
   '/metodologia': typeof MetodologiaRoute
   '/visao-geral': typeof VisaoGeralRoute
 }
@@ -51,20 +67,43 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/contato': typeof ContatoRoute
+  '/dados-alesp': typeof DadosAlespRoute
+  '/dados-tesouro': typeof DadosTesouroRoute
   '/metodologia': typeof MetodologiaRoute
   '/visao-geral': typeof VisaoGeralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/contato' | '/metodologia' | '/visao-geral'
+  fullPaths:
+    | '/'
+    | '/contato'
+    | '/dados-alesp'
+    | '/dados-tesouro'
+    | '/metodologia'
+    | '/visao-geral'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contato' | '/metodologia' | '/visao-geral'
-  id: '__root__' | '/' | '/contato' | '/metodologia' | '/visao-geral'
+  to:
+    | '/'
+    | '/contato'
+    | '/dados-alesp'
+    | '/dados-tesouro'
+    | '/metodologia'
+    | '/visao-geral'
+  id:
+    | '__root__'
+    | '/'
+    | '/contato'
+    | '/dados-alesp'
+    | '/dados-tesouro'
+    | '/metodologia'
+    | '/visao-geral'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContatoRoute: typeof ContatoRoute
+  DadosAlespRoute: typeof DadosAlespRoute
+  DadosTesouroRoute: typeof DadosTesouroRoute
   MetodologiaRoute: typeof MetodologiaRoute
   VisaoGeralRoute: typeof VisaoGeralRoute
 }
@@ -83,6 +122,20 @@ declare module '@tanstack/react-router' {
       path: '/metodologia'
       fullPath: '/metodologia'
       preLoaderRoute: typeof MetodologiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dados-tesouro': {
+      id: '/dados-tesouro'
+      path: '/dados-tesouro'
+      fullPath: '/dados-tesouro'
+      preLoaderRoute: typeof DadosTesouroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dados-alesp': {
+      id: '/dados-alesp'
+      path: '/dados-alesp'
+      fullPath: '/dados-alesp'
+      preLoaderRoute: typeof DadosAlespRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contato': {
@@ -105,6 +158,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContatoRoute: ContatoRoute,
+  DadosAlespRoute: DadosAlespRoute,
+  DadosTesouroRoute: DadosTesouroRoute,
   MetodologiaRoute: MetodologiaRoute,
   VisaoGeralRoute: VisaoGeralRoute,
 }
