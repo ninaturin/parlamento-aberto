@@ -4,6 +4,15 @@ import { dataset } from "@/lib/emendas/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { AppSidebar, MobileNav } from "@/components/layout/AppSidebar";
 
+// Formatação determinística (evita hydration mismatch SSR/CSR com timezone/locale)
+function formatISODate(iso: string): string {
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${d}/${m}/${y}`;
+}
+function formatIntBRL(n: number): string {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -73,11 +82,11 @@ function Index() {
               direta nos registros oficiais — sem inferências sobre valores indicados ou
               recebidos antes do pagamento.
             </p>
-            <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary-foreground/15 px-4 py-2 text-xs backdrop-blur">
+            <div className="mt-8 inline-flex flex-wrap items-center gap-2 rounded-full bg-primary-foreground/15 px-4 py-2 text-xs backdrop-blur">
               <CalendarClock className="h-3.5 w-3.5" />
-              Atualizado em: {new Date(dataset.gerado_em).toLocaleDateString("pt-BR")}
+              Atualizado em: {formatISODate(dataset.gerado_em)}
               {" · "}
-              {dataset.registros.length.toLocaleString("pt-BR")} registros (
+              {formatIntBRL(dataset.registros.length)} registros (
               {dataset.anos.join(", ")})
             </div>
           </div>
@@ -108,12 +117,22 @@ function Index() {
           </div>
 
           <div className="mt-10 rounded-xl border border-border bg-muted/40 p-6">
-            <h3 className="text-sm font-semibold text-primary">Fonte e metodologia</h3>
-            <p className="mt-2 text-sm text-muted-foreground">{dataset.fonte}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Apenas valores efetivamente pagos (estágio “Pagas”) compõem o indicador de Total
-              Pago. Demais estágios são contabilizados separadamente.
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-semibold text-primary">Fonte e metodologia</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{dataset.fonte}</p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Apenas valores efetivamente pagos (estágio “Pagas”) compõem o indicador de
+                  Total Pago. Demais estágios são contabilizados separadamente.
+                </p>
+              </div>
+              <Link
+                to="/metodologia"
+                className="shrink-0 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium text-secondary transition-colors hover:bg-accent"
+              >
+                Ver metodologia →
+              </Link>
+            </div>
           </div>
         </section>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">

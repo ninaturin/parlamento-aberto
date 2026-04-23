@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VisaoGeralRouteImport } from './routes/visao-geral'
 import { Route as VisaoDetalhadaRouteImport } from './routes/visao-detalhada'
+import { Route as MetodologiaRouteImport } from './routes/metodologia'
 import { Route as FiltrosRouteImport } from './routes/filtros'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const VisaoGeralRoute = VisaoGeralRouteImport.update({
 const VisaoDetalhadaRoute = VisaoDetalhadaRouteImport.update({
   id: '/visao-detalhada',
   path: '/visao-detalhada',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MetodologiaRoute = MetodologiaRouteImport.update({
+  id: '/metodologia',
+  path: '/metodologia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FiltrosRoute = FiltrosRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contato': typeof ContatoRoute
   '/filtros': typeof FiltrosRoute
+  '/metodologia': typeof MetodologiaRoute
   '/visao-detalhada': typeof VisaoDetalhadaRoute
   '/visao-geral': typeof VisaoGeralRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contato': typeof ContatoRoute
   '/filtros': typeof FiltrosRoute
+  '/metodologia': typeof MetodologiaRoute
   '/visao-detalhada': typeof VisaoDetalhadaRoute
   '/visao-geral': typeof VisaoGeralRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/contato': typeof ContatoRoute
   '/filtros': typeof FiltrosRoute
+  '/metodologia': typeof MetodologiaRoute
   '/visao-detalhada': typeof VisaoDetalhadaRoute
   '/visao-geral': typeof VisaoGeralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/contato' | '/filtros' | '/visao-detalhada' | '/visao-geral'
+  fullPaths:
+    | '/'
+    | '/contato'
+    | '/filtros'
+    | '/metodologia'
+    | '/visao-detalhada'
+    | '/visao-geral'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contato' | '/filtros' | '/visao-detalhada' | '/visao-geral'
+  to:
+    | '/'
+    | '/contato'
+    | '/filtros'
+    | '/metodologia'
+    | '/visao-detalhada'
+    | '/visao-geral'
   id:
     | '__root__'
     | '/'
     | '/contato'
     | '/filtros'
+    | '/metodologia'
     | '/visao-detalhada'
     | '/visao-geral'
   fileRoutesById: FileRoutesById
@@ -81,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContatoRoute: typeof ContatoRoute
   FiltrosRoute: typeof FiltrosRoute
+  MetodologiaRoute: typeof MetodologiaRoute
   VisaoDetalhadaRoute: typeof VisaoDetalhadaRoute
   VisaoGeralRoute: typeof VisaoGeralRoute
 }
@@ -99,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/visao-detalhada'
       fullPath: '/visao-detalhada'
       preLoaderRoute: typeof VisaoDetalhadaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/metodologia': {
+      id: '/metodologia'
+      path: '/metodologia'
+      fullPath: '/metodologia'
+      preLoaderRoute: typeof MetodologiaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/filtros': {
@@ -129,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContatoRoute: ContatoRoute,
   FiltrosRoute: FiltrosRoute,
+  MetodologiaRoute: MetodologiaRoute,
   VisaoDetalhadaRoute: VisaoDetalhadaRoute,
   VisaoGeralRoute: VisaoGeralRoute,
 }
