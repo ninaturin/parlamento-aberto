@@ -1,53 +1,44 @@
 
-# Dashboard de Emendas Parlamentares Federais
 
-Dashboard de BI em português para acompanhar transferências de Emendas Parlamentares Individuais e de Bancada (2023–2025), seguindo a metodologia do Tesouro Nacional — sem inferências, apenas o que está nos dados.
+# Direcionar formulário de contato para ninamturin@gmail.com
 
-## Estrutura de páginas (rotas)
+Atualmente o formulário em `/contato` apenas simula o envio (timeout + toast), sem entregar a mensagem em lugar nenhum. Vamos fazer com que cada submissão chegue de fato no e-mail **ninamturin@gmail.com**.
 
-Layout fixo com **sidebar lateral azul** (logo da prefeitura no topo + ícones: Home, Visão Geral, Visão Detalhada, Filtros, Contato), conforme as imagens enviadas. Paleta azul corporativa (#1E3A5F, #4A7BB5, #E8EEF5), tipografia sans-serif, cantos arredondados, fundo claro com gráficos decorativos sutis.
+## Abordagem
 
-1. **/** — **Capa** (Página Inicial)
-   - Hero com imagem urbana, título "DASHBOARD — EMENDAS PARLAMENTARES"
-   - Cards de navegação (Visão Geral, Visão Detalhada, Contato) e selo "Atualizado em: <data>"
+Usar **Resend** (via Lovable Cloud / Lovable AI Gateway-friendly, compatível com o runtime Worker) através de uma **server function** do TanStack Start. É a forma mais robusta — não depende do cliente de e-mail do usuário e registra o envio no servidor.
 
-2. **/visao-geral** — **Visão Geral**
-   - **KPIs**: Total Pago (R$), Total de Transferências (contagem de OB), Ticket Médio, Nº de Entes Beneficiados
-   - **Distribuição por Tipo de Emenda** (Individual vs Bancada) — donut
-   - **Categoria Econômica** (Corrente vs Capital) — donut
-   - **Análise Temporal Anual** — gráfico de barras por ano (2023–2025); clicar num ano faz drill-down para a visão mensal
-   - **Detalhamento Mensal** — gráfico de linha/barra dos 12 meses do ano selecionado (revela sazonalidade, picos de fim de ano)
+### Fluxo
 
-3. **/visao-detalhada** — **Visão Detalhada**
-   - **Mapa/Gráfico por UF** — barras horizontais com valor pago por UF
-   - **Ranking Top 20 Entes** que mais receberam
-   - **Curva de Pareto** — % do total acumulado nos top entes (mostra concentração)
-   - **Tabela detalhada** com colunas: Ente, UF, Tipo de Ente, Tipo de Emenda, Categoria, Valor Pago, Mês/Ano, OB, CNPJ Favorecido — com busca, ordenação e paginação
-   - Botão **Exportar CSV** dos dados filtrados
+```text
+Formulário (cliente)
+   └─► server function `enviarContato`
+          └─► Resend API  ──►  ninamturin@gmail.com
+```
 
-4. **/contato** — formulário simples (nome, email, mensagem) e informações institucionais
+## Mudanças
 
-## Filtros globais (painel lateral, persistem entre páginas)
+1. **Nova server function** `src/lib/contato/enviar-contato.ts`
+   - `createServerFn({ method: "POST" })` com validação Zod (nome, e-mail, assunto, mensagem)
+   - Chama a API da Resend via `fetch` usando `RESEND_API_KEY` (secret)
+   - Destinatário fixo: `ninamturin@gmail.com`
+   - Assunto do e-mail: `[Dashboard Emendas] {assunto}`
+   - Corpo em HTML com nome, e-mail de resposta (`reply_to`) e mensagem formatada
+   - Retorna `{ ok: true }` ou lança erro tratável
 
-- Ano (2023, 2024, 2025)
-- UF (multi-seleção)
-- Tipo de Emenda (Individual / Bancada)
-- Categoria Econômica (Corrente / Capital)
-- Tipo de Ente (Estado / Município)
-- Transferência Especial (Sim / Não)
+2. **Atualizar `src/routes/contato.tsx`**
+   - Trocar o `setTimeout` simulado pela chamada real à server function
+   - Tratar erro com `toast.error` e sucesso com `toast.success`
+   - Manter UX atual (botão "Enviando…", reset do form)
+   - Atualizar o e-mail exibido no card "Informações" para **ninamturin@gmail.com**
 
-## Tratamento dos dados
+3. **Configurar secret `RESEND_API_KEY`**
+   - Solicitar a chave via Lovable Cloud (uma única vez); o usuário cola a key gerada em https://resend.com/api-keys
+   - O remetente padrão será `Dashboard Emendas <onboarding@resend.dev>` (domínio de teste da Resend, funciona sem verificação) — depois pode ser trocado por um domínio próprio
 
-- Os 3 arquivos XLSX (2023, 2024, 2025) serão **convertidos uma única vez para um JSON unificado** em `src/data/emendas.json` (carregado no client — volume cabe), padronizando nomes de colunas em snake_case
-- **id_transferencia** = `OB + CNPJ_favorecido + ano + mes` para deduplicar
-- Valores monetários tratados como número (R$); formatação pt-BR com `Intl.NumberFormat`
-- Cálculos feitos via `useMemo` sobre o dataset filtrado — todos os agregados (somas, contagens, ticket médio, Pareto) derivam diretamente dos registros, **sem inferência de valores indicados ou recebidos antes do pagamento**
+## Arquivos
 
-## Atualização futura
+**Criar:** `src/lib/contato/enviar-contato.ts`
+**Editar:** `src/routes/contato.tsx`
+**Secret novo:** `RESEND_API_KEY`
 
-- Estrutura preparada para trocar o JSON estático por um endpoint (`/api/public/emendas`) sem alterar componentes
-- Documentação no README explicando como reprocessar planilhas novas via script
-
-## Stack
-
-TanStack Start + Tailwind + shadcn/ui + **Recharts** para todos os gráficos. Sem backend nesta primeira versão (dados embarcados).
