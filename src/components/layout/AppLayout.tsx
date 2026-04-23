@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
 import { AppSidebar, MobileNav } from "./AppSidebar";
-import { FiltrosBar } from "./FiltrosBar";
 
 export function AppLayout({
   children,
   title,
   subtitle,
-  showFilters = true,
+  filterBar,
 }: {
   children: ReactNode;
   title?: string;
   subtitle?: string;
-  showFilters?: boolean;
+  filterBar?: ReactNode;
 }) {
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -24,10 +23,10 @@ export function AppLayout({
             {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
           </header>
         )}
-        {showFilters && <FiltrosBar />}
+        {filterBar}
         <main className="flex-1 px-4 py-6 md:px-8">{children}</main>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
-          Dashboard de Emendas Parlamentares · Dados ALESP · Sem inferências sobre valores
+          Dashboard de Emendas Parlamentares · Tesouro Nacional + ALESP · Sem inferências sobre valores
         </footer>
       </div>
     </div>

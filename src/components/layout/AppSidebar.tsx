@@ -2,16 +2,15 @@ import { Link, useLocation } from "@tanstack/react-router";
 import {
   Home,
   LayoutDashboard,
-  BarChart3,
-  Filter,
-  Mail,
+  Landmark,
   Building2,
+  Mail,
   BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
-  to: "/" | "/visao-geral" | "/visao-detalhada" | "/metodologia" | "/filtros" | "/contato";
+  to: "/" | "/visao-geral" | "/dados-tesouro" | "/dados-alesp" | "/metodologia" | "/contato";
   label: string;
   icon: typeof Home;
   exact?: boolean;
@@ -20,9 +19,9 @@ type NavItem = {
 const items: NavItem[] = [
   { to: "/", label: "Início", icon: Home, exact: true },
   { to: "/visao-geral", label: "Visão Geral", icon: LayoutDashboard },
-  { to: "/visao-detalhada", label: "Visão Detalhada", icon: BarChart3 },
+  { to: "/dados-tesouro", label: "Dados Tesouro Nacional", icon: Landmark },
+  { to: "/dados-alesp", label: "Dados ALESP", icon: Building2 },
   { to: "/metodologia", label: "Metodologia", icon: BookOpen },
-  { to: "/filtros", label: "Filtros", icon: Filter },
   { to: "/contato", label: "Contato", icon: Mail },
 ];
 
@@ -63,7 +62,7 @@ export function AppSidebar() {
         })}
       </nav>
       <div className="px-6 py-4 text-[10px] leading-relaxed text-sidebar-foreground/60">
-        Dados públicos do Tesouro Nacional — Transferências de Emendas Parlamentares (SIAFI).
+        Duas fontes oficiais: Tesouro Nacional (SIAFI) e Assembleia Legislativa de SP (ALESP).
       </div>
     </aside>
   );

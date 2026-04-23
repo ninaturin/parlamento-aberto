@@ -1,5 +1,5 @@
-import { useFiltros } from "@/lib/emendas/filters-context";
-import { opcoesUnicas } from "@/lib/emendas/data";
+import { useFiltrosAlesp } from "@/lib/emendas/alesp/filters-context";
+import { opcoesUnicasAlesp } from "@/lib/emendas/alesp/data";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,9 +11,9 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, X } from "lucide-react";
-import type { Filtros } from "@/lib/emendas/types";
+import type { FiltrosAlesp } from "@/lib/emendas/alesp/types";
 
-type FilterKey = keyof Filtros;
+type FilterKey = keyof FiltrosAlesp;
 
 function MultiSelect({
   label,
@@ -45,7 +45,7 @@ function MultiSelect({
           <ChevronDown className="h-3 w-3 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="max-h-80 w-56 overflow-y-auto">
+      <DropdownMenuContent className="max-h-80 w-64 overflow-y-auto">
         <DropdownMenuLabel>{label}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {options.map((opt) => (
@@ -63,61 +63,68 @@ function MultiSelect({
   );
 }
 
-export function FiltrosBar() {
-  const { filtros, setFiltro, reset } = useFiltros();
+export function FiltrosBarAlesp() {
+  const { filtros, setFiltro, reset } = useFiltrosAlesp();
 
-  const toggle = <K extends FilterKey>(key: K, value: Filtros[K][number]) => {
-    const cur = filtros[key] as Array<Filtros[K][number]>;
+  const toggle = <K extends FilterKey>(key: K, value: FiltrosAlesp[K][number]) => {
+    const cur = filtros[key] as Array<FiltrosAlesp[K][number]>;
     const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
-    setFiltro(key, next as Filtros[K]);
+    setFiltro(key, next as FiltrosAlesp[K]);
   };
 
   const totalAtivos =
     filtros.anos.length +
-    filtros.ufs.length +
-    filtros.tiposEnte.length +
-    filtros.tiposEmenda.length +
-    filtros.categorias.length +
-    filtros.transfEspecial.length;
+    filtros.municipios.length +
+    filtros.parlamentares.length +
+    filtros.partidos.length +
+    filtros.orgaos.length +
+    filtros.estagios.length +
+    filtros.funcoes.length;
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/40 px-4 py-3 md:px-8">
       <span className="text-xs font-medium text-muted-foreground">Filtros:</span>
       <MultiSelect
         label="Ano"
-        options={opcoesUnicas.anos}
+        options={opcoesUnicasAlesp.anos}
         selected={filtros.anos}
         onToggle={(v) => toggle("anos", v as number)}
       />
       <MultiSelect
-        label="UF"
-        options={opcoesUnicas.ufs}
-        selected={filtros.ufs}
-        onToggle={(v) => toggle("ufs", v as string)}
+        label="Município"
+        options={opcoesUnicasAlesp.municipios}
+        selected={filtros.municipios}
+        onToggle={(v) => toggle("municipios", v as string)}
       />
       <MultiSelect
-        label="Tipo de Ente"
-        options={opcoesUnicas.tiposEnte}
-        selected={filtros.tiposEnte}
-        onToggle={(v) => toggle("tiposEnte", v as string)}
+        label="Parlamentar"
+        options={opcoesUnicasAlesp.parlamentares}
+        selected={filtros.parlamentares}
+        onToggle={(v) => toggle("parlamentares", v as string)}
       />
       <MultiSelect
-        label="Tipo de Emenda"
-        options={opcoesUnicas.tiposEmenda}
-        selected={filtros.tiposEmenda}
-        onToggle={(v) => toggle("tiposEmenda", v as string)}
+        label="Partido"
+        options={opcoesUnicasAlesp.partidos}
+        selected={filtros.partidos}
+        onToggle={(v) => toggle("partidos", v as string)}
       />
       <MultiSelect
-        label="Categoria"
-        options={opcoesUnicas.categorias}
-        selected={filtros.categorias}
-        onToggle={(v) => toggle("categorias", v as string)}
+        label="Órgão"
+        options={opcoesUnicasAlesp.orgaos}
+        selected={filtros.orgaos}
+        onToggle={(v) => toggle("orgaos", v as string)}
       />
       <MultiSelect
-        label="Transf. Especial"
-        options={opcoesUnicas.transfEspecial}
-        selected={filtros.transfEspecial}
-        onToggle={(v) => toggle("transfEspecial", v as string)}
+        label="Estágio"
+        options={opcoesUnicasAlesp.estagios}
+        selected={filtros.estagios}
+        onToggle={(v) => toggle("estagios", v as string)}
+      />
+      <MultiSelect
+        label="Função"
+        options={opcoesUnicasAlesp.funcoes}
+        selected={filtros.funcoes}
+        onToggle={(v) => toggle("funcoes", v as string)}
       />
       {totalAtivos > 0 && (
         <Button
