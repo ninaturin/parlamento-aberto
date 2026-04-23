@@ -2,13 +2,20 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, LayoutDashboard, BarChart3, Filter, Mail, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const items = [
+type NavItem = {
+  to: "/" | "/visao-geral" | "/visao-detalhada" | "/filtros" | "/contato";
+  label: string;
+  icon: typeof Home;
+  exact?: boolean;
+};
+
+const items: NavItem[] = [
   { to: "/", label: "Início", icon: Home, exact: true },
   { to: "/visao-geral", label: "Visão Geral", icon: LayoutDashboard },
   { to: "/visao-detalhada", label: "Visão Detalhada", icon: BarChart3 },
   { to: "/filtros", label: "Filtros", icon: Filter },
   { to: "/contato", label: "Contato", icon: Mail },
-] as const;
+];
 
 export function AppSidebar() {
   const { pathname } = useLocation();
