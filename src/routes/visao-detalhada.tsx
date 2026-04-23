@@ -25,18 +25,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useFiltros } from "@/lib/emendas/filters-context";
-import { isPaga, valorPago } from "@/lib/emendas/data";
-import { formatBRL, formatCompactBRL, formatNumber } from "@/lib/emendas/format";
+import { formatBRL, formatCompactBRL, formatNumber, MESES_PT } from "@/lib/emendas/format";
 import type { Emenda } from "@/lib/emendas/types";
 
 export const Route = createFileRoute("/visao-detalhada")({
   head: () => ({
     meta: [
-      { title: "Visão Detalhada — Dashboard de Emendas" },
+      { title: "Visão Detalhada — Dashboard de Emendas Parlamentares Federais" },
       {
         name: "description",
         content:
-          "Ranking de municípios beneficiados, curva de Pareto de concentração e tabela detalhada exportável.",
+          "Distribuição por UF, ranking dos entes que mais receberam, curva de Pareto e tabela detalhada exportável das emendas parlamentares federais.",
       },
     ],
   }),
@@ -44,45 +43,47 @@ export const Route = createFileRoute("/visao-detalhada")({
 });
 
 type SortKey =
-  | "municipio"
-  | "parlamentar"
-  | "partido"
-  | "orgao"
-  | "estagio"
-  | "valor_decisao"
-  | "data_pagamento";
+  | "ente"
+  | "uf"
+  | "tipo_ente"
+  | "tipo_emenda"
+  | "categoria_economica"
+  | "ano"
+  | "mes"
+  | "ob"
+  | "valor_pago";
 
 function VisaoDetalhada() {
   const { registrosFiltrados } = useFiltros();
   const [busca, setBusca] = useState("");
   const [page, setPage] = useState(0);
-  const [sortKey, setSortKey] = useState<SortKey>("valor_decisao");
+  const [sortKey, setSortKey] = useState<SortKey>("valor_pago");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const pageSize = 20;
 
   const stats = useMemo(() => {
-    const porMunicipio = new Map<string, number>();
-    const porParlamentar = new Map<string, number>();
+    const porUF = new Map<string, number>();
+    const porEnte = new Map<string, number>();
     let totalPago = 0;
 
     for (const r of registrosFiltrados) {
-      if (!isPaga(r)) continue;
-      const v = valorPago(r);
+      const v = r.valor_pago;
       totalPago += v;
-      if (r.municipio) porMunicipio.set(r.municipio, (porMunicipio.get(r.municipio) || 0) + v);
-      if (r.parlamentar)
-        porParlamentar.set(r.parlamentar, (porParlamentar.get(r.parlamentar) || 0) + v);
+      porUF.set(r.uf, (porUF.get(r.uf) || 0) + v);
+      const enteKey = `${r.ente} (${r.uf})`;
+      porEnte.set(enteKey, (porEnte.get(enteKey) || 0) + v);
     }
-    const topMun = [...porMunicipio.entries()]
+
+    const ufList = [...porUF.entries()]
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-    const topPar = [...porParlamentar.entries()]
+
+    const topEnte = [...porEnte.entries()]
       .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 20);
+      .sort((a, b) => b.value - a.value);
 
     let acum = 0;
-    const pareto = topMun.slice(0, 30).map((d) => {
+    const pareto = topEnte.slice(0, 30).map((d) => {
       acum += d.value;
       return {
         name: d.name,
@@ -91,12 +92,18 @@ function VisaoDetalhada() {
       };
     });
 
+    const top20 = topEnte.slice(0, 20);
+    const concentracaoTop20 = totalPago > 0
+      ? (top20.reduce((s, d) => s + d.value, 0) / totalPago) * 100
+      : 0;
+
     return {
-      topMunicipios: topMun.slice(0, 20),
-      topParlamentares: topPar,
+      ufList,
+      topEnte: top20,
       pareto,
       totalPago,
-      totalMunicipios: porMunicipio.size,
+      totalEntes: porEnte.size,
+      concentracaoTop20,
     };
   }, [registrosFiltrados]);
 
@@ -104,8 +111,7 @@ function VisaoDetalhada() {
     const q = busca.trim().toLowerCase();
     if (!q) return registrosFiltrados;
     return registrosFiltrados.filter((r) =>
-      [r.municipio, r.parlamentar, r.partido, r.orgao, r.beneficiario, r.objeto, r.codigo]
-        .filter(Boolean)
+      [r.ente, r.uf, r.nome_favorecido, r.cnpj_favorecido, r.ob, r.tipo_emenda]
         .some((v) => String(v).toLowerCase().includes(q)),
     );
   }, [busca, registrosFiltrados]);
@@ -113,8 +119,8 @@ function VisaoDetalhada() {
   const sorted = useMemo(() => {
     const arr = [...filtered];
     arr.sort((a, b) => {
-      const av = (a[sortKey] ?? "") as string | number;
-      const bv = (b[sortKey] ?? "") as string | number;
+      const av = a[sortKey] as string | number;
+      const bv = b[sortKey] as string | number;
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
       return 0;
@@ -136,27 +142,28 @@ function VisaoDetalhada() {
 
   const exportCSV = () => {
     const header = [
-      "codigo",
-      "municipio",
-      "parlamentar",
-      "partido",
-      "orgao",
-      "objeto",
-      "beneficiario",
+      "ente",
+      "uf",
+      "tipo_ente",
       "ano",
       "mes",
-      "data_pagamento",
-      "estagio",
-      "valor_decisao",
-      "valor_remanejado",
+      "tipo_emenda",
+      "transferencia_especial",
+      "categoria_economica",
+      "ob",
+      "cnpj_favorecido",
+      "nome_favorecido",
+      "valor_pago",
     ];
     const rows = sorted.map((r: Emenda) =>
-      header.map((h) => {
-        const v = (r as unknown as Record<string, unknown>)[h];
-        if (v == null) return "";
-        const s = String(v).replace(/"/g, '""');
-        return `"${s}"`;
-      }).join(","),
+      header
+        .map((h) => {
+          const v = (r as unknown as Record<string, unknown>)[h];
+          if (v == null) return "";
+          const s = String(v).replace(/"/g, '""');
+          return `"${s}"`;
+        })
+        .join(","),
     );
     const csv = [header.join(","), ...rows].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
@@ -171,96 +178,95 @@ function VisaoDetalhada() {
   return (
     <AppLayout
       title="Visão Detalhada"
-      subtitle="Concentração, ranking e dados granulares com busca e exportação"
+      subtitle="Distribuição por UF, ranking de entes, concentração e dados granulares"
     >
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard
-          title="Top 20 Municípios por Valor Pago"
-          description={`${stats.totalMunicipios} municípios beneficiados no recorte atual`}
-        >
-          <ResponsiveContainer width="100%" height={420}>
-            <BarChart
-              data={stats.topMunicipios}
-              layout="vertical"
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                type="number"
-                tickFormatter={(v) => formatCompactBRL(v)}
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                width={130}
-              />
-              <Tooltip
-                formatter={(v: number) => [formatBRL(v), "Pago"]}
-                contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="value" fill="var(--chart-1)" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </SectionCard>
+      <SectionCard
+        title="Valor Pago por UF"
+        description={`${stats.ufList.length} unidades federativas no recorte atual`}
+      >
+        <ResponsiveContainer width="100%" height={Math.max(320, stats.ufList.length * 18)}>
+          <BarChart
+            data={stats.ufList}
+            layout="vertical"
+            margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis
+              type="number"
+              tickFormatter={(v) => formatCompactBRL(v)}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              width={50}
+            />
+            <Tooltip
+              formatter={(v: number) => [formatBRL(v), "Pago"]}
+              contentStyle={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+            />
+            <Bar dataKey="value" fill="var(--chart-1)" radius={[0, 6, 6, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </SectionCard>
 
-        <SectionCard
-          title="Top 20 Parlamentares por Valor Pago"
-          description="Recursos efetivamente pagos por autor da emenda"
-        >
-          <ResponsiveContainer width="100%" height={420}>
-            <BarChart
-              data={stats.topParlamentares}
-              layout="vertical"
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                type="number"
-                tickFormatter={(v) => formatCompactBRL(v)}
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                width={150}
-              />
-              <Tooltip
-                formatter={(v: number) => [formatBRL(v), "Pago"]}
-                contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </SectionCard>
-      </div>
+      <SectionCard
+        className="mt-4"
+        title="Top 20 Entes que Mais Receberam"
+        description={`${formatNumber(stats.totalEntes)} entes beneficiados — top 20 concentram ${stats.concentracaoTop20.toFixed(1)}% do total`}
+      >
+        <ResponsiveContainer width="100%" height={460}>
+          <BarChart
+            data={stats.topEnte}
+            layout="vertical"
+            margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis
+              type="number"
+              tickFormatter={(v) => formatCompactBRL(v)}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
+              width={180}
+            />
+            <Tooltip
+              formatter={(v: number) => [formatBRL(v), "Pago"]}
+              contentStyle={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+            />
+            <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </SectionCard>
 
       <SectionCard
         className="mt-4"
         title="Curva de Pareto — Concentração de Recursos"
-        description="Percentual acumulado do total pago entre os 30 maiores municípios"
+        description="Percentual acumulado do total pago entre os 30 maiores entes"
       >
         <ResponsiveContainer width="100%" height={340}>
-          <ComposedChart data={stats.pareto} margin={{ top: 10, right: 30, left: 0, bottom: 60 }}>
+          <ComposedChart data={stats.pareto} margin={{ top: 10, right: 30, left: 0, bottom: 90 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-              angle={-35}
+              tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+              angle={-45}
               textAnchor="end"
-              height={70}
+              height={100}
               interval={0}
             />
             <YAxis
@@ -314,8 +320,8 @@ function VisaoDetalhada() {
                   setBusca(e.target.value);
                   setPage(0);
                 }}
-                placeholder="Buscar..."
-                className="h-8 w-48 pl-7 text-xs"
+                placeholder="Ente, UF, OB, CNPJ..."
+                className="h-8 w-56 pl-7 text-xs"
               />
             </div>
             <Button onClick={exportCSV} size="sm" variant="outline" className="h-8 gap-1.5">
@@ -329,15 +335,18 @@ function VisaoDetalhada() {
           <Table>
             <TableHeader>
               <TableRow>
-                {([
-                  ["municipio", "Município"],
-                  ["parlamentar", "Parlamentar"],
-                  ["partido", "Partido"],
-                  ["orgao", "Órgão"],
-                  ["estagio", "Estágio"],
-                  ["data_pagamento", "Data Pgto."],
-                  ["valor_decisao", "Valor (R$)"],
-                ] as [SortKey, string][]).map(([k, label]) => (
+                {(
+                  [
+                    ["ente", "Ente"],
+                    ["uf", "UF"],
+                    ["tipo_ente", "Tipo"],
+                    ["tipo_emenda", "Tipo Emenda"],
+                    ["categoria_economica", "Categoria"],
+                    ["mes", "Mês/Ano"],
+                    ["ob", "OB"],
+                    ["valor_pago", "Valor (R$)"],
+                  ] as [SortKey, string][]
+                ).map(([k, label]) => (
                   <TableHead
                     key={k}
                     onClick={() => toggleSort(k)}
@@ -352,35 +361,38 @@ function VisaoDetalhada() {
             <TableBody>
               {paged.map((r) => (
                 <TableRow key={r.id}>
-                  <TableCell className="text-xs font-medium">{r.municipio ?? "—"}</TableCell>
-                  <TableCell className="text-xs">{r.parlamentar ?? "—"}</TableCell>
-                  <TableCell className="text-xs">{r.partido ?? "—"}</TableCell>
-                  <TableCell className="text-xs">{r.orgao ?? "—"}</TableCell>
+                  <TableCell className="text-xs font-medium">{r.ente}</TableCell>
+                  <TableCell className="text-xs">{r.uf}</TableCell>
+                  <TableCell className="text-xs">{r.tipo_ente}</TableCell>
                   <TableCell className="text-xs">
                     <span
                       className={
                         "inline-block rounded-full px-2 py-0.5 text-[10px] font-medium " +
-                        (r.estagio === "Pagas"
+                        (r.tipo_emenda === "Emenda Individual"
                           ? "bg-secondary/15 text-secondary"
-                          : "bg-muted text-muted-foreground")
+                          : "bg-accent text-primary")
                       }
                     >
-                      {r.estagio ?? "—"}
+                      {r.tipo_emenda.replace("Emenda ", "")}
                     </span>
                   </TableCell>
+                  <TableCell className="text-xs">
+                    {r.categoria_economica.replace("DESPESAS ", "").toLowerCase()}
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-xs">
-                    {r.data_pagamento
-                      ? new Date(r.data_pagamento).toLocaleDateString("pt-BR")
-                      : "—"}
+                    {MESES_PT[r.mes - 1]}/{r.ano}
+                  </TableCell>
+                  <TableCell className="font-mono text-[10px] text-muted-foreground">
+                    {r.ob.slice(-12)}
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs tabular-nums">
-                    {formatBRL(r.valor_decisao)}
+                    {formatBRL(r.valor_pago)}
                   </TableCell>
                 </TableRow>
               ))}
               {paged.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-xs text-muted-foreground">
+                  <TableCell colSpan={8} className="py-10 text-center text-xs text-muted-foreground">
                     Nenhum registro encontrado.
                   </TableCell>
                 </TableRow>
@@ -391,7 +403,7 @@ function VisaoDetalhada() {
         {totalPages > 1 && (
           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              Página {page + 1} de {totalPages}
+              Página {page + 1} de {formatNumber(totalPages)}
             </span>
             <div className="flex gap-1">
               <Button

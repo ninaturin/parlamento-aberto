@@ -18,17 +18,16 @@ import { Kpi } from "@/components/dashboard/Kpi";
 import { SectionCard } from "@/components/dashboard/SectionCard";
 import { Donut } from "@/components/dashboard/Donut";
 import { useFiltros } from "@/lib/emendas/filters-context";
-import { isPaga, valorPago } from "@/lib/emendas/data";
 import { formatBRL, formatCompactBRL, formatNumber, MESES_PT } from "@/lib/emendas/format";
 
 export const Route = createFileRoute("/visao-geral")({
   head: () => ({
     meta: [
-      { title: "Visão Geral — Dashboard de Emendas" },
+      { title: "Visão Geral — Dashboard de Emendas Parlamentares Federais" },
       {
         name: "description",
         content:
-          "KPIs, distribuição por estágio, partido e análise temporal das emendas parlamentares impositivas.",
+          "KPIs, distribuição por tipo de emenda e categoria econômica, e análise temporal das transferências federais a estados e municípios.",
       },
     ],
   }),
@@ -41,61 +40,58 @@ function VisaoGeral() {
 
   const stats = useMemo(() => {
     let totalPago = 0;
-    let countPagas = 0;
-    const municipios = new Set<string>();
-    const parlamentares = new Set<string>();
-    const porEstagio = new Map<string, number>();
-    const porPartido = new Map<string, number>();
-    const porOrgao = new Map<string, number>();
+    const obs = new Set<string>();
+    const entes = new Set<string>();
+    const porTipoEmenda = new Map<string, number>();
+    const porCategoria = new Map<string, number>();
+    const porTipoEnte = new Map<string, number>();
     const porAno = new Map<number, number>();
     const porAnoMes = new Map<string, number>();
 
     for (const r of registrosFiltrados) {
-      const v = valorPago(r);
-      if (isPaga(r)) {
-        totalPago += v;
-        countPagas++;
-        if (r.municipio) municipios.add(r.municipio);
-        if (r.parlamentar) parlamentares.add(r.parlamentar);
-        if (r.partido) porPartido.set(r.partido, (porPartido.get(r.partido) || 0) + v);
-        if (r.orgao) porOrgao.set(r.orgao, (porOrgao.get(r.orgao) || 0) + v);
-        if (r.ano != null) porAno.set(r.ano, (porAno.get(r.ano) || 0) + v);
-        if (r.data_pagamento) {
-          const key = r.data_pagamento.slice(0, 7);
-          porAnoMes.set(key, (porAnoMes.get(key) || 0) + v);
-        }
-      }
-      if (r.estagio)
-        porEstagio.set(r.estagio, (porEstagio.get(r.estagio) || 0) + (r.valor_decisao || 0));
+      const v = r.valor_pago;
+      totalPago += v;
+      obs.add(r.ob);
+      entes.add(r.ente + "|" + r.uf);
+      porTipoEmenda.set(r.tipo_emenda, (porTipoEmenda.get(r.tipo_emenda) || 0) + v);
+      porCategoria.set(
+        r.categoria_economica,
+        (porCategoria.get(r.categoria_economica) || 0) + v,
+      );
+      porTipoEnte.set(r.tipo_ente, (porTipoEnte.get(r.tipo_ente) || 0) + v);
+      porAno.set(r.ano, (porAno.get(r.ano) || 0) + v);
+      const key = `${r.ano}-${String(r.mes).padStart(2, "0")}`;
+      porAnoMes.set(key, (porAnoMes.get(key) || 0) + v);
     }
 
     return {
       totalPago,
-      countPagas,
-      ticketMedio: countPagas > 0 ? totalPago / countPagas : 0,
-      nMunicipios: municipios.size,
-      nParlamentares: parlamentares.size,
-      porEstagio,
-      porPartido,
-      porOrgao,
+      countOB: obs.size,
+      countTransf: registrosFiltrados.length,
+      ticketMedio: registrosFiltrados.length > 0 ? totalPago / registrosFiltrados.length : 0,
+      nEntes: entes.size,
+      porTipoEmenda,
+      porCategoria,
+      porTipoEnte,
       porAno,
       porAnoMes,
     };
   }, [registrosFiltrados]);
 
-  const dataEstagio = [...stats.porEstagio.entries()]
+  const dataTipoEmenda = [...stats.porTipoEmenda.entries()]
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
-  const dataPartido = [...stats.porPartido.entries()]
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 8);
+  const dataCategoria = [...stats.porCategoria.entries()]
+    .map(([name, value]) => ({
+      name: name.replace("DESPESAS ", "").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()),
+      value,
+    }))
+    .sort((a, b) => b.value - a.value);
 
-  const dataOrgao = [...stats.porOrgao.entries()]
+  const dataTipoEnte = [...stats.porTipoEnte.entries()]
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 8);
+    .sort((a, b) => b.value - a.value);
 
   const dataAnos = [...stats.porAno.entries()]
     .map(([ano, valor]) => ({ ano: String(ano), valor, anoNum: ano }))
@@ -115,7 +111,7 @@ function VisaoGeral() {
   return (
     <AppLayout
       title="Visão Geral"
-      subtitle="Indicadores agregados das emendas parlamentares impositivas"
+      subtitle="Indicadores agregados das transferências de Emendas Parlamentares Federais (Tesouro Nacional)"
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Kpi
@@ -126,33 +122,42 @@ function VisaoGeral() {
         />
         <Kpi
           icon={FileText}
-          label="Nº de Pagamentos"
-          value={formatNumber(stats.countPagas)}
-          hint="emendas no estágio Pagas"
+          label="Nº de Transferências"
+          value={formatNumber(stats.countTransf)}
+          hint={`${formatNumber(stats.countOB)} ordens bancárias únicas`}
         />
         <Kpi
           icon={TrendingUp}
           label="Ticket Médio"
           value={formatBRL(stats.ticketMedio)}
-          hint="por emenda paga"
+          hint="por transferência (OB)"
         />
         <Kpi
           icon={Building2}
-          label="Municípios Beneficiados"
-          value={formatNumber(stats.nMunicipios)}
-          hint={`${stats.nParlamentares} parlamentares`}
+          label="Entes Beneficiados"
+          value={formatNumber(stats.nEntes)}
+          hint="estados + municípios distintos"
         />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <SectionCard
-          title="Distribuição por Estágio"
-          description="Inclui todos os estágios (Pagas, Impedidas, Empenhadas, Em processamento)"
+          title="Tipo de Emenda"
+          description="Individual vs Bancada — soma do valor pago"
         >
-          <Donut data={dataEstagio} />
+          <Donut data={dataTipoEmenda} />
         </SectionCard>
-        <SectionCard title="Top Partidos por Valor Pago" description="Soma do valor pago por partido do parlamentar">
-          <Donut data={dataPartido} />
+        <SectionCard
+          title="Categoria Econômica"
+          description="Despesas correntes vs despesas de capital"
+        >
+          <Donut data={dataCategoria} />
+        </SectionCard>
+        <SectionCard
+          title="Tipo de Ente"
+          description="Estados vs municípios — destino final dos recursos"
+        >
+          <Donut data={dataTipoEnte} />
         </SectionCard>
       </div>
 
@@ -188,9 +193,7 @@ function VisaoGeral() {
                 {dataAnos.map((d) => (
                   <Cell
                     key={d.ano}
-                    fill={
-                      d.anoNum === anoSelecionado ? "var(--chart-1)" : "var(--chart-2)"
-                    }
+                    fill={d.anoNum === anoSelecionado ? "var(--chart-1)" : "var(--chart-2)"}
                   />
                 ))}
               </Bar>
@@ -200,7 +203,7 @@ function VisaoGeral() {
 
         <SectionCard
           title={`Detalhamento Mensal — ${anoSelecionado ?? "—"}`}
-          description="Sazonalidade dos pagamentos ao longo dos meses"
+          description="Sazonalidade dos pagamentos ao longo dos meses (picos típicos no fim do exercício)"
           action={
             anoDrill != null && (
               <button
@@ -239,42 +242,6 @@ function VisaoGeral() {
                 activeDot={{ r: 6 }}
               />
             </LineChart>
-          </ResponsiveContainer>
-        </SectionCard>
-
-        <SectionCard
-          title="Top Órgãos Processadores"
-          description="Soma do valor pago por órgão executor"
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={dataOrgao}
-              layout="vertical"
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                type="number"
-                tickFormatter={(v) => formatCompactBRL(v)}
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                width={140}
-              />
-              <Tooltip
-                formatter={(v: number) => [formatBRL(v), "Pago"]}
-                contentStyle={{
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="value" fill="var(--chart-2)" radius={[0, 6, 6, 0]} />
-            </BarChart>
           </ResponsiveContainer>
         </SectionCard>
       </div>
