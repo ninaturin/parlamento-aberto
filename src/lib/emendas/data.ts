@@ -1,60 +1,78 @@
 import raw from "@/data/emendas.json";
-import type { Emenda, EmendasDataset, Filtros } from "./types";
+import type { Emenda, EmendasDataset, EmendasRaw, Filtros } from "./types";
 
-export const dataset = raw as unknown as EmendasDataset;
+const data = raw as unknown as EmendasRaw;
+
+// Materializa o formato colunar em uma lista de objetos. Feito uma única vez.
+function materializar(): Emenda[] {
+  const { dim, cols, n } = data;
+  const out: Emenda[] = new Array(n);
+  for (let i = 0; i < n; i++) {
+    out[i] = {
+      id: cols.ob[i] + "|" + i,
+      ente: dim.entes[cols.ente[i]],
+      uf: dim.ufs[cols.uf[i]],
+      codigo_ibge: cols.ibge[i] || null,
+      ano: cols.ano[i],
+      mes: cols.mes[i],
+      tipo_ente: dim.tipos_ente[cols.tipo_ente[i]],
+      ob: cols.ob[i],
+      cnpj_favorecido: dim.cnpjs[cols.cnpj[i]],
+      nome_favorecido: dim.favorecidos[cols.favorecido[i]],
+      tipo_emenda: dim.tipos_emenda[cols.tipo_emenda[i]],
+      transferencia_especial: dim.transferencia_especial[cols.transferencia_especial[i]],
+      categoria_economica: dim.categorias[cols.categoria[i]],
+      valor_pago: cols.valor[i],
+    };
+  }
+  return out;
+}
+
+const registros = materializar();
+
+export const dataset: EmendasDataset = {
+  gerado_em: data.gerado_em,
+  fonte: data.fonte,
+  periodo: data.periodo,
+  criterio: data.criterio,
+  anos: data.anos,
+  registros,
+};
 
 export function aplicarFiltros(registros: Emenda[], f: Filtros): Emenda[] {
   return registros.filter((r) => {
-    if (f.anos.length && (r.ano == null || !f.anos.includes(r.ano))) return false;
-    if (f.municipios.length && (!r.municipio || !f.municipios.includes(r.municipio)))
-      return false;
-    if (f.partidos.length && (!r.partido || !f.partidos.includes(r.partido))) return false;
-    if (f.orgaos.length && (!r.orgao || !f.orgaos.includes(r.orgao))) return false;
-    if (
-      f.parlamentares.length &&
-      (!r.parlamentar || !f.parlamentares.includes(r.parlamentar))
-    )
-      return false;
-    if (f.estagios.length && (!r.estagio || !f.estagios.includes(r.estagio))) return false;
-    if (f.funcoes.length && (!r.funcao_governo || !f.funcoes.includes(r.funcao_governo)))
+    if (f.anos.length && !f.anos.includes(r.ano)) return false;
+    if (f.ufs.length && !f.ufs.includes(r.uf)) return false;
+    if (f.tiposEnte.length && !f.tiposEnte.includes(r.tipo_ente)) return false;
+    if (f.tiposEmenda.length && !f.tiposEmenda.includes(r.tipo_emenda)) return false;
+    if (f.categorias.length && !f.categorias.includes(r.categoria_economica)) return false;
+    if (f.transfEspecial.length && !f.transfEspecial.includes(r.transferencia_especial))
       return false;
     return true;
   });
 }
 
-export function isPaga(r: Emenda): boolean {
-  return r.estagio === "Pagas";
-}
-
-/** valor efetivamente pago — apenas registros com estágio "Pagas" usando VALOR DECISÃO */
-export function valorPago(r: Emenda): number {
-  return isPaga(r) ? r.valor_decisao : 0;
-}
-
 export const opcoesUnicas = (() => {
   const anos = new Set<number>();
-  const municipios = new Set<string>();
-  const partidos = new Set<string>();
-  const orgaos = new Set<string>();
-  const parlamentares = new Set<string>();
-  const estagios = new Set<string>();
-  const funcoes = new Set<string>();
+  const ufs = new Set<string>();
+  const tiposEnte = new Set<string>();
+  const tiposEmenda = new Set<string>();
+  const categorias = new Set<string>();
+  const transfEspecial = new Set<string>();
   for (const r of dataset.registros) {
-    if (r.ano != null) anos.add(r.ano);
-    if (r.municipio) municipios.add(r.municipio);
-    if (r.partido) partidos.add(r.partido);
-    if (r.orgao) orgaos.add(r.orgao);
-    if (r.parlamentar) parlamentares.add(r.parlamentar);
-    if (r.estagio) estagios.add(r.estagio);
-    if (r.funcao_governo) funcoes.add(r.funcao_governo);
+    anos.add(r.ano);
+    ufs.add(r.uf);
+    tiposEnte.add(r.tipo_ente);
+    tiposEmenda.add(r.tipo_emenda);
+    categorias.add(r.categoria_economica);
+    transfEspecial.add(r.transferencia_especial);
   }
   return {
     anos: [...anos].sort((a, b) => a - b),
-    municipios: [...municipios].sort(),
-    partidos: [...partidos].sort(),
-    orgaos: [...orgaos].sort(),
-    parlamentares: [...parlamentares].sort(),
-    estagios: [...estagios].sort(),
-    funcoes: [...funcoes].sort(),
+    ufs: [...ufs].sort(),
+    tiposEnte: [...tiposEnte].sort(),
+    tiposEmenda: [...tiposEmenda].sort(),
+    categorias: [...categorias].sort(),
+    transfEspecial: [...transfEspecial].sort(),
   };
 })();

@@ -1,46 +1,80 @@
+// Registro materializado de uma transferência de emenda parlamentar federal
+// (Tesouro Nacional / SIAFI). Cada linha corresponde a uma OB paga.
 export type Emenda = {
   id: string;
-  codigo: string | null;
-  municipio: string | null;
-  orgao: string | null;
-  objeto: string | null;
-  parlamentar: string | null;
-  partido: string | null;
-  ano: number | null;
-  mes: number | null;
-  data_pagamento: string | null;
-  substituida: string | null;
-  natureza: string | null;
-  funcao_governo: string | null;
-  beneficiario: string | null;
-  estagio: string | null;
-  valor_decisao: number;
-  valor_remanejado: number;
+  ente: string;
+  uf: string;
+  codigo_ibge: string | null;
+  ano: number;
+  mes: number;
+  tipo_ente: string; // "Estado" | "Município"
+  ob: string;
+  cnpj_favorecido: string;
+  nome_favorecido: string;
+  tipo_emenda: string; // "Emenda Individual" | "Emenda de Bancada"
+  transferencia_especial: string; // "Sim" | "Não"
+  categoria_economica: string; // "DESPESAS DE CAPITAL" | "DESPESAS CORRENTES"
+  valor_pago: number;
+};
+
+// Formato compacto colunar persistido em src/data/emendas.json
+export type EmendasRaw = {
+  gerado_em: string;
+  fonte: string;
+  periodo: string;
+  criterio: string;
+  anos: number[];
+  dim: {
+    entes: string[];
+    ufs: string[];
+    tipos_ente: string[];
+    cnpjs: string[];
+    favorecidos: string[];
+    tipos_emenda: string[];
+    transferencia_especial: string[];
+    categorias: string[];
+  };
+  cols: {
+    ente: number[];
+    uf: number[];
+    ibge: string[];
+    ano: number[];
+    mes: number[];
+    tipo_ente: number[];
+    ob: string[];
+    cnpj: number[];
+    favorecido: number[];
+    tipo_emenda: number[];
+    transferencia_especial: number[];
+    categoria: number[];
+    valor: number[];
+  };
+  n: number;
 };
 
 export type EmendasDataset = {
   gerado_em: string;
   fonte: string;
+  periodo: string;
+  criterio: string;
   anos: number[];
   registros: Emenda[];
 };
 
 export type Filtros = {
   anos: number[];
-  municipios: string[];
-  partidos: string[];
-  orgaos: string[];
-  parlamentares: string[];
-  estagios: string[];
-  funcoes: string[];
+  ufs: string[];
+  tiposEnte: string[];
+  tiposEmenda: string[];
+  categorias: string[];
+  transfEspecial: string[];
 };
 
 export const EMPTY_FILTROS: Filtros = {
   anos: [],
-  municipios: [],
-  partidos: [],
-  orgaos: [],
-  parlamentares: [],
-  estagios: [],
-  funcoes: [],
+  ufs: [],
+  tiposEnte: [],
+  tiposEmenda: [],
+  categorias: [],
+  transfEspecial: [],
 };

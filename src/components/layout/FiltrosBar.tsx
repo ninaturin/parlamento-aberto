@@ -68,20 +68,17 @@ export function FiltrosBar() {
 
   const toggle = <K extends FilterKey>(key: K, value: Filtros[K][number]) => {
     const cur = filtros[key] as Array<Filtros[K][number]>;
-    const next = cur.includes(value)
-      ? cur.filter((v) => v !== value)
-      : [...cur, value];
+    const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
     setFiltro(key, next as Filtros[K]);
   };
 
   const totalAtivos =
     filtros.anos.length +
-    filtros.municipios.length +
-    filtros.partidos.length +
-    filtros.orgaos.length +
-    filtros.parlamentares.length +
-    filtros.estagios.length +
-    filtros.funcoes.length;
+    filtros.ufs.length +
+    filtros.tiposEnte.length +
+    filtros.tiposEmenda.length +
+    filtros.categorias.length +
+    filtros.transfEspecial.length;
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/40 px-4 py-3 md:px-8">
@@ -93,40 +90,34 @@ export function FiltrosBar() {
         onToggle={(v) => toggle("anos", v as number)}
       />
       <MultiSelect
-        label="Município"
-        options={opcoesUnicas.municipios}
-        selected={filtros.municipios}
-        onToggle={(v) => toggle("municipios", v as string)}
+        label="UF"
+        options={opcoesUnicas.ufs}
+        selected={filtros.ufs}
+        onToggle={(v) => toggle("ufs", v as string)}
       />
       <MultiSelect
-        label="Parlamentar"
-        options={opcoesUnicas.parlamentares}
-        selected={filtros.parlamentares}
-        onToggle={(v) => toggle("parlamentares", v as string)}
+        label="Tipo de Ente"
+        options={opcoesUnicas.tiposEnte}
+        selected={filtros.tiposEnte}
+        onToggle={(v) => toggle("tiposEnte", v as string)}
       />
       <MultiSelect
-        label="Partido"
-        options={opcoesUnicas.partidos}
-        selected={filtros.partidos}
-        onToggle={(v) => toggle("partidos", v as string)}
+        label="Tipo de Emenda"
+        options={opcoesUnicas.tiposEmenda}
+        selected={filtros.tiposEmenda}
+        onToggle={(v) => toggle("tiposEmenda", v as string)}
       />
       <MultiSelect
-        label="Órgão"
-        options={opcoesUnicas.orgaos}
-        selected={filtros.orgaos}
-        onToggle={(v) => toggle("orgaos", v as string)}
+        label="Categoria"
+        options={opcoesUnicas.categorias}
+        selected={filtros.categorias}
+        onToggle={(v) => toggle("categorias", v as string)}
       />
       <MultiSelect
-        label="Estágio"
-        options={opcoesUnicas.estagios}
-        selected={filtros.estagios}
-        onToggle={(v) => toggle("estagios", v as string)}
-      />
-      <MultiSelect
-        label="Função"
-        options={opcoesUnicas.funcoes}
-        selected={filtros.funcoes}
-        onToggle={(v) => toggle("funcoes", v as string)}
+        label="Transf. Especial"
+        options={opcoesUnicas.transfEspecial}
+        selected={filtros.transfEspecial}
+        onToggle={(v) => toggle("transfEspecial", v as string)}
       />
       {totalAtivos > 0 && (
         <Button
