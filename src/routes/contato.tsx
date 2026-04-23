@@ -38,7 +38,7 @@ function Contato() {
   };
 
   return (
-    <AppLayout title="Contato" subtitle="Tire dúvidas, envie sugestões ou reporte inconsistências" showFilters={false}>
+    <AppLayout title="Contato" subtitle="Tire dúvidas, envie sugestões ou reporte inconsistências">
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <SectionCard title="Envie sua mensagem">

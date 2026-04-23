@@ -1,4 +1,4 @@
-import raw from "@/data/emendas.json";
+import raw from "@/data/emendas-tesouro.json";
 import type { Emenda, EmendasDataset, EmendasRaw, Filtros } from "./types";
 
 const data = raw as unknown as EmendasRaw;

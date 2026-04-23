@@ -1,7 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { FiltrosProvider } from "@/lib/emendas/filters-context";
+import { FiltrosProvider } from "@/lib/emendas/tesouro/filters-context";
+import { FiltrosAlespProvider } from "@/lib/emendas/alesp/filters-context";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -70,8 +71,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <FiltrosProvider>
-      <Outlet />
-      <Toaster />
+      <FiltrosAlespProvider>
+        <Outlet />
+        <Toaster />
+      </FiltrosAlespProvider>
     </FiltrosProvider>
   );
 }
