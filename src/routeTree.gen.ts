@@ -9,8 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VisaoGeralRouteImport } from './routes/visao-geral'
+import { Route as VisaoDetalhadaRouteImport } from './routes/visao-detalhada'
+import { Route as FiltrosRouteImport } from './routes/filtros'
+import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as IndexRouteImport } from './routes/index'
 
+const VisaoGeralRoute = VisaoGeralRouteImport.update({
+  id: '/visao-geral',
+  path: '/visao-geral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisaoDetalhadaRoute = VisaoDetalhadaRouteImport.update({
+  id: '/visao-detalhada',
+  path: '/visao-detalhada',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FiltrosRoute = FiltrosRouteImport.update({
+  id: '/filtros',
+  path: '/filtros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +43,78 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/contato': typeof ContatoRoute
+  '/filtros': typeof FiltrosRoute
+  '/visao-detalhada': typeof VisaoDetalhadaRoute
+  '/visao-geral': typeof VisaoGeralRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/contato': typeof ContatoRoute
+  '/filtros': typeof FiltrosRoute
+  '/visao-detalhada': typeof VisaoDetalhadaRoute
+  '/visao-geral': typeof VisaoGeralRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/contato': typeof ContatoRoute
+  '/filtros': typeof FiltrosRoute
+  '/visao-detalhada': typeof VisaoDetalhadaRoute
+  '/visao-geral': typeof VisaoGeralRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/contato' | '/filtros' | '/visao-detalhada' | '/visao-geral'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/contato' | '/filtros' | '/visao-detalhada' | '/visao-geral'
+  id:
+    | '__root__'
+    | '/'
+    | '/contato'
+    | '/filtros'
+    | '/visao-detalhada'
+    | '/visao-geral'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ContatoRoute: typeof ContatoRoute
+  FiltrosRoute: typeof FiltrosRoute
+  VisaoDetalhadaRoute: typeof VisaoDetalhadaRoute
+  VisaoGeralRoute: typeof VisaoGeralRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/visao-geral': {
+      id: '/visao-geral'
+      path: '/visao-geral'
+      fullPath: '/visao-geral'
+      preLoaderRoute: typeof VisaoGeralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visao-detalhada': {
+      id: '/visao-detalhada'
+      path: '/visao-detalhada'
+      fullPath: '/visao-detalhada'
+      preLoaderRoute: typeof VisaoDetalhadaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/filtros': {
+      id: '/filtros'
+      path: '/filtros'
+      fullPath: '/filtros'
+      preLoaderRoute: typeof FiltrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,16 +127,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ContatoRoute: ContatoRoute,
+  FiltrosRoute: FiltrosRoute,
+  VisaoDetalhadaRoute: VisaoDetalhadaRoute,
+  VisaoGeralRoute: VisaoGeralRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
