@@ -16,12 +16,11 @@ function FiltrosPage() {
   const { filtros, reset, registrosFiltrados, registros } = useFiltros();
   const grupos: { label: string; values: (string | number)[] }[] = [
     { label: "Anos", values: filtros.anos },
-    { label: "Municípios", values: filtros.municipios },
-    { label: "Parlamentares", values: filtros.parlamentares },
-    { label: "Partidos", values: filtros.partidos },
-    { label: "Órgãos", values: filtros.orgaos },
-    { label: "Estágios", values: filtros.estagios },
-    { label: "Funções de Governo", values: filtros.funcoes },
+    { label: "UFs", values: filtros.ufs },
+    { label: "Tipo de Ente", values: filtros.tiposEnte },
+    { label: "Tipo de Emenda", values: filtros.tiposEmenda },
+    { label: "Categoria Econômica", values: filtros.categorias },
+    { label: "Transferência Especial", values: filtros.transfEspecial },
   ];
 
   return (
@@ -56,9 +55,16 @@ function FiltrosPage() {
           ))}
         </div>
         <p className="mt-6 text-xs text-muted-foreground">
-          Use a barra de filtros no topo de cada página para selecionar múltiplos valores. Os filtros
-          persistem ao navegar entre <Link to="/visao-geral" className="underline">Visão Geral</Link>{" "}
-          e <Link to="/visao-detalhada" className="underline">Visão Detalhada</Link>.
+          Use a barra de filtros no topo de cada página para selecionar múltiplos valores. Os
+          filtros persistem ao navegar entre{" "}
+          <Link to="/visao-geral" className="underline">
+            Visão Geral
+          </Link>{" "}
+          e{" "}
+          <Link to="/visao-detalhada" className="underline">
+            Visão Detalhada
+          </Link>
+          .
         </p>
       </SectionCard>
     </AppLayout>
