@@ -1,9 +1,17 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, LayoutDashboard, BarChart3, Filter, Mail, Building2 } from "lucide-react";
+import {
+  Home,
+  LayoutDashboard,
+  BarChart3,
+  Filter,
+  Mail,
+  Building2,
+  BookOpen,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
-  to: "/" | "/visao-geral" | "/visao-detalhada" | "/filtros" | "/contato";
+  to: "/" | "/visao-geral" | "/visao-detalhada" | "/metodologia" | "/filtros" | "/contato";
   label: string;
   icon: typeof Home;
   exact?: boolean;
@@ -13,6 +21,7 @@ const items: NavItem[] = [
   { to: "/", label: "Início", icon: Home, exact: true },
   { to: "/visao-geral", label: "Visão Geral", icon: LayoutDashboard },
   { to: "/visao-detalhada", label: "Visão Detalhada", icon: BarChart3 },
+  { to: "/metodologia", label: "Metodologia", icon: BookOpen },
   { to: "/filtros", label: "Filtros", icon: Filter },
   { to: "/contato", label: "Contato", icon: Mail },
 ];
