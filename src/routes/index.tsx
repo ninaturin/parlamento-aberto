@@ -16,11 +16,11 @@ function formatIntBRL(n: number): string {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Início — Dashboard de Emendas Parlamentares" },
+      { title: "Início — Dashboard de Emendas Parlamentares Federais" },
       {
         name: "description",
         content:
-          "Capa do painel de transparência de emendas parlamentares impositivas. Acesse Visão Geral, Visão Detalhada e mais.",
+          "Painel de transparência das transferências de Emendas Parlamentares Individuais e de Bancada para estados, DF e municípios (Tesouro Nacional / SIAFI).",
       },
     ],
   }),
@@ -31,13 +31,13 @@ const cards = [
   {
     to: "/visao-geral" as const,
     title: "Visão Geral",
-    desc: "KPIs, distribuição por estágio, partido e análise temporal.",
+    desc: "KPIs, tipo de emenda, categoria econômica e análise temporal.",
     icon: LayoutDashboard,
   },
   {
     to: "/visao-detalhada" as const,
     title: "Visão Detalhada",
-    desc: "Ranking de municípios, curva de Pareto e tabela exportável.",
+    desc: "Distribuição por UF, ranking de entes, Pareto e tabela exportável.",
     icon: BarChart3,
   },
   {
@@ -75,18 +75,18 @@ function Index() {
             <h1 className="text-4xl font-bold leading-tight md:text-6xl">
               Dashboard
               <br />
-              <span className="text-primary-foreground/90">Emendas Parlamentares</span>
+              <span className="text-primary-foreground/90">Emendas Parlamentares Federais</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base text-primary-foreground/85 md:text-lg">
-              Acompanhe a execução financeira das emendas parlamentares impositivas com base
-              direta nos registros oficiais — sem inferências sobre valores indicados ou
-              recebidos antes do pagamento.
+              Transferências de Emendas Parlamentares Individuais e de Bancada para estados, DF
+              e municípios — fonte: Tesouro Nacional (SIAFI). Regime de caixa, sem inferências
+              sobre valores indicados ou empenhados.
             </p>
             <div className="mt-8 inline-flex flex-wrap items-center gap-2 rounded-full bg-primary-foreground/15 px-4 py-2 text-xs backdrop-blur">
               <CalendarClock className="h-3.5 w-3.5" />
               Atualizado em: {formatISODate(dataset.gerado_em)}
               {" · "}
-              {formatIntBRL(dataset.registros.length)} registros (
+              {formatIntBRL(dataset.registros.length)} transferências (
               {dataset.anos.join(", ")})
             </div>
           </div>
@@ -122,8 +122,9 @@ function Index() {
                 <h3 className="text-sm font-semibold text-primary">Fonte e metodologia</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{dataset.fonte}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Apenas valores efetivamente pagos (estágio “Pagas”) compõem o indicador de
-                  Total Pago. Demais estágios são contabilizados separadamente.
+                  Os valores representam pagamentos efetivos via Ordem Bancária (regime de
+                  caixa). Não inferimos valores indicados, empenhados ou recebidos antes do
+                  pagamento.
                 </p>
               </div>
               <Link
@@ -136,7 +137,7 @@ function Index() {
           </div>
         </section>
         <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
-          Dashboard de Emendas Parlamentares · Dados ALESP
+          Dashboard de Emendas Parlamentares Federais · Fonte: Tesouro Nacional (SIAFI)
         </footer>
       </div>
     </div>

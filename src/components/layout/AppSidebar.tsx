@@ -63,7 +63,7 @@ export function AppSidebar() {
         })}
       </nav>
       <div className="px-6 py-4 text-[10px] leading-relaxed text-sidebar-foreground/60">
-        Dados públicos da Assembleia Legislativa do Estado de São Paulo (ALESP).
+        Dados públicos do Tesouro Nacional — Transferências de Emendas Parlamentares (SIAFI).
       </div>
     </aside>
   );
