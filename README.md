@@ -1,4 +1,5 @@
 # Dashboard de Emendas Parlamentares (Teste no Lovable)
+## Confira o projeto em: https://emendas-parlamentares.lovable.app/
 
 Este repositório contém um protótipo de dashboard de Business Intelligence desenvolvido como **teste de construção no Lovable**.
 
@@ -40,4 +41,4 @@ Os dados seguem o **critério de caixa**, ou seja, os valores representam pagame
 
 ## Status
 
-Protótipo em fase inicial — desenvolvido para experimentação e aprendizado.
+Protótipo em fase inicial, desenvolvido para experimentação e aprendizado.
